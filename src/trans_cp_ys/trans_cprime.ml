@@ -28,7 +28,7 @@ let rec trans_ne : CP.ne -> YS.program
 let rec trans : CP.program -> YS.program
 = fun pgm -> match pgm with
   | CP.SKIP -> raise TODO
-  | CP.ASSGINN (x, ne) -> raise TODO
+  | CP.ASSIGNN (x, ne) -> raise TODO
   | CP.ASSIGNS (x, se) -> raise TODO
   | CP.SEQ (c1, c2) -> raise TODO
   | CP.IF (ne, c1, c2) -> raise TODO
