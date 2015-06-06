@@ -1,0 +1,2 @@
+(define-type short (bitvector 16))
+(define-type char (bitvector 8))

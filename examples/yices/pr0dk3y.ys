@@ -1,0 +1,9 @@
+(include "types.ys")
+(include "k20_1_E10.ys")
+(include "k20_2_DA2.ys")
+(define k20::short)
+
+(assert (and (not (k20_1_E10 k20)) (not (k20_2_DA2 k20))))
+
+(check)
+(show-model)

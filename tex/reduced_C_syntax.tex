@@ -1,0 +1,56 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage{amssymb}
+
+\newcommand{\OR}{\ \ \ |\ \ \ }
+
+\begin{document}
+\[ \begin{array}{lcl}
+C & \rightarrow & \mbox{skip} \\
+& | & x := A \OR y := S \\
+& | & C\ ;\ C \\
+& | & \mbox{readint}\ x \\
+& | & \mbox{readstr}\ y \\
+& | & \mbox{if}\ A\ C\ C\\
+& | & \mbox{while}\ A\ C \\
+& | & \mbox{accept} \OR \mbox{reject} \\
+& | & \mbox{return}\ A \\
+\\
+
+A & \rightarrow & n \OR x \\
+& | & uop\ A \\
+& | & A\ bop\ A \\
+& | & \mbox{len}\ S \\
+& | & \mbox{cmp}\ S\ S \\
+& | & f\ A \\
+\\
+
+S & \rightarrow & s \OR y \\
+& | & \mbox{cat}\ S\ S \\
+& | & \mbox{cpy}\ S \\
+
+\end{array}\]
+
+\[ \begin{array}{l}
+n \in \mathbb{Z} \\
+s \in String \\
+x \in intVar \\
+y \in strVar \\
+\\
+Var = intVar \cup strVar \\
+\end{array}\]
+
+\[ \begin{array}{lcccccccccc}
+
+uop & \rightarrow & - &|& ! &|& \sim \\
+\\
+
+bop & \rightarrow & + &|& - &|& * &|& / &|& \% \\
+& | & \&\& &|& || \\
+& | & \& &|& | &|& \hat{} \\
+& | & == &|& != &|& < &|& > \\
+\\
+
+\end{array}\]
+
+\end{document}
