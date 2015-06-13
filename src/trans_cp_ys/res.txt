@@ -1,0 +1,301 @@
+let
+proc
+@fk20_1_E10
+(
+@na1
+)
+=
+return
+(
+(
+@na1
+shr
+8
+)
+&
+255
+)
+=
+(
+@na1
+&
+255
+)
+in
+let
+proc
+@fk20_2_DA2
+(
+@na1
+)
+=
+return
+(
+not
+(
+(
+(
+@na1
+shr
+12
+)
+^
+(
+@na1
+shr
+8
+)
+)
+&
+(
+15
+)
+)
+)
+or
+(
+not
+(
+(
+(
+@na1
+shr
+8
+)
+^
+(
+(
+@na1
+shr
+4
+)
+&
+255
+)
+)
+&
+(
+15
+)
+)
+)
+or
+(
+not
+(
+(
+(
+(
+@na1
+shr
+4
+)
+&
+255
+)
+^
+(
+@na1
+&
+255
+)
+)
+&
+(
+15
+)
+)
+)
+in
+let
+proc
+@fpr0dk3y
+(
+@na1
+)
+=
+if
+(
+@fk20_1_E10
+(
+@na1
+)
+or
+@fk20_2_DA2
+(
+@na1
+)
+)
+then
+reject
+else
+accept
+in
+readint
+@nx
+;
+assert
+@fpr0dk3y
+(
+@nx
+)
+eof
+LETF(
+  "@fk20_1_E10",
+  "@na1",
+  RETURN(
+    EQ(
+      ANDB(
+        SHR(
+          NVAR(
+            "@na1"
+          ),
+          NUM(
+            8
+          )
+        ),
+        NUM(
+          255
+        )
+      ),
+      ANDB(
+        NVAR(
+          "@na1"
+        ),
+        NUM(
+          255
+        )
+      )
+    )
+  ),
+  LETF(
+    "@fk20_2_DA2",
+    "@na1",
+    RETURN(
+      ORL(
+        ORL(
+          NOTL(
+            ANDB(
+              XORB(
+                SHR(
+                  NVAR(
+                    "@na1"
+                  ),
+                  NUM(
+                    12
+                  )
+                ),
+                SHR(
+                  NVAR(
+                    "@na1"
+                  ),
+                  NUM(
+                    8
+                  )
+                )
+              ),
+              NUM(
+                15
+              )
+            )
+          ),
+          NOTL(
+            ANDB(
+              XORB(
+                SHR(
+                  NVAR(
+                    "@na1"
+                  ),
+                  NUM(
+                    8
+                  )
+                ),
+                ANDB(
+                  SHR(
+                    NVAR(
+                      "@na1"
+                    ),
+                    NUM(
+                      4
+                    )
+                  ),
+                  NUM(
+                    255
+                  )
+                )
+              ),
+              NUM(
+                15
+              )
+            )
+          )
+        ),
+        NOTL(
+          ANDB(
+            XORB(
+              ANDB(
+                SHR(
+                  NVAR(
+                    "@na1"
+                  ),
+                  NUM(
+                    4
+                  )
+                ),
+                NUM(
+                  255
+                )
+              ),
+              ANDB(
+                NVAR(
+                  "@na1"
+                ),
+                NUM(
+                  255
+                )
+              )
+            ),
+            NUM(
+              15
+            )
+          )
+        )
+      )
+    ),
+    LETF(
+      "@fpr0dk3y",
+      "@na1",
+      IF(
+        ORL(
+          CALL(
+            "@fk20_1_E10",
+            NVAR(
+              "@na1"
+            )
+          ),
+          CALL(
+            "@fk20_2_DA2",
+            NVAR(
+              "@na1"
+            )
+          )
+        ),
+        REJECT,
+        ACCEPT
+      ),
+      SEQ(
+        READINT(
+          "@nx"
+        ),
+        ASSERT(
+          CALL(
+            "@fpr0dk3y",
+            NVAR(
+              "@nx"
+            )
+          )
+        )
+      )
+    )
+  )
+)

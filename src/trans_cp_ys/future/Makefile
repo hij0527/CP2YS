@@ -1,12 +1,11 @@
 .SUFFIXES: .ml .mll .mly .cmo .cmi .mli
-OBJS=lexer.cmo parser.cmo cprime.cmo pp.cmo ssa.cmo ys.cmo trans_cprime.cmo
-MAIN_OBJ=main.cmo
+OBJS=lexer.cmo parser.cmo cprime.cmo ys.cmo trans_cprime.cmo pp.cmo main.cmo
 TARGET=run.elf
 MLC=ocamlc
 YACC=ocamlyacc
 LEX=ocamllex
 
-$(TARGET): $(OBJS) $(MAIN_OBJ)
+$(TARGET): $(OBJS)
 	$(MLC) -o $@ $^
 
 .ml.cmo:
@@ -24,15 +23,14 @@ clean:
 	rm -f *.cmx *.cmi parser.mli parser.ml lexer.ml *.o *.cmo $(TARGET)
 
 cprime.cmo: cprime.ml
-ssa.cmo: ssa.ml cprime.cmo pp.cmo
 ys.cmo: ys.ml
 trans_cprime.cmo : trans_cprime.ml cprime.cmo ys.cmo
-pp.cmo : pp.ml trans_cprime.cmo cprime.cmo
-lexer.cmo: lexer.ml
-lexer.ml: lexer.mll parser.cmo
+pp.cmo : pp.ml trans_cprime.cmo
 parser.ml: parser.mly trans_cprime.cmo
 parser.mli: parser.mly
 parser.cmi: parser.mli
-parser.cmo: cprime.cmo parser.ml parser.cmi
-main.cmo : $(OBJS) main.ml
+parser.cmo: parser.ml parser.cmi
+main.cmo : trans_cprime.cmo main.ml
+lexer.cmo: lexer.ml
+lexer.ml: lexer.mll parser.cmo
 

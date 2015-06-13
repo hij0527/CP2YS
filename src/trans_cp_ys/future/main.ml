@@ -3,14 +3,11 @@
 
 open Cprime
 open Pp
-open Ssa
-open Ys
-open Trans_cprime
 
 let main () =
   let pp = ref false in
-  let ssa = ref false in
-  let ys = ref false in
+  let psm5 = ref false in
+  let psonata = ref false in
   let sm5 = ref false in
   let rall = ref false in
   let all = ref false in
@@ -19,8 +16,8 @@ let main () =
   let _ =
     Arg.parse
       [("-pp", Arg.Set pp, "display parse tree");
-       ("-ssa", Arg.Set ssa, "display parse tree (ssa form)");
-       ("-ys", Arg.Set ys, "print translated ys code");
+       ("-psm5", Arg.Set psm5, "print translated sm5 code");
+       ("-psonata", Arg.Set psonata, "print translated sonata code");
        ("-k", Arg.Set k, "run using k interpreter");
        ("-sm5", Arg.Set sm5, "translate k-- to sm5 and run using sm5 interpreter");
        ("-rall", Arg.Set rall, "run all");
@@ -31,10 +28,7 @@ let main () =
   let lexbuf = Lexing.from_channel (if !src = "" then stdin else open_in !src) in
   let pgm = Parser.program Lexer.start lexbuf in
    
-  if !pp then ignore (CPParseTreePrinter.print pgm)
-  else if !ssa then ignore (CPParseTreePrinter.print (SSA.to_ssa pgm))
-  else if !ys then ignore (YS.print (Translator.trans (SSA.to_ssa pgm)))
-  else ignore (YS.to_file (Translator.trans (SSA.to_ssa pgm)) "result.ys")
+  if !pp then (CPParseTreePrinter.print pgm)
   (*
   else if !psm5 then ignore (Sm5.print (Trans_k.trans pgm))
   else if !psonata then ignore (Sonata.print (Rozetta.trans (Trans_k.trans pgm)))

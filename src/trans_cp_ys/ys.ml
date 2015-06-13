@@ -1,99 +1,117 @@
 module type YICES =
   sig
-   exception Error of string
-    type nvar = string
-    type svar = string
-    type fvar = string
-    type params = string
+    exception Error of string
+
+    type symbol = string
+    type vartype =
+        TO of vartype * vartype
+      | BV of int
+      | INT
+      | BOOL
     type uop = NEG | NOTB | NOTL
     type bop = ADD | SUB | MUL | DIV | REM
       | SHR | SAR | SHL
       | ANDB | XORB | ORB
       | ANDL | ORL
       | EQ | NEQ | LT | GT | LE | GE
-    type se =
-        SCONST of string
-      | SVAR of svar
-      | CAT of se * se
-      | CPY of se
-    type ne =
-        NCONST of int
-      | NVAR of nvar
-      | UOP of uop * ne
-      | BOP of bop * ne * ne
-      | LEN of se
-      | CMP of se * se
-      | CALL of fvar * ne
-    type cmd =
+    type expr =
+        TRUE | FALSE
+      | VAR of symbol
+      | NUM of int
+      | LAMBDA of symbol * vartype * expr
+      | LET of symbol * expr * expr
+      | UOP of uop * expr
+      | BOP of bop * expr * expr
+      | ITE of expr * expr * expr
+      | CALL of symbol * expr
+    type command =
         SKIP
-      | ASSIGNN of nvar * ne
-      | ASSIGNS of svar * se
-      | SEQ of cmd * cmd
-      | IF of ne * cmd * cmd
-      | LETNV of nvar * ne * cmd
-      | LETSV of svar * se * cmd
-      | LETF of fvar * nvar * cmd * cmd
-      | RETURN of ne
-      | READINT of nvar
-      | READSTR of svar
-      | WRITEINT of ne
-      | WRITESTR of se
-      | ACCEPT
-      | REJECT
-      | ASSERT of ne
-    type program = cmd
-    type memory
-    type value
-    val emptyMemory : memory
-    val run : memory * program -> value
+      | DECLARE of symbol * vartype
+      | DEFINE of symbol * vartype * expr
+      | ASSERT of expr
+      | SEQ of command * command
+      | RET of expr
+    type program = command
+    val program_to_string : program -> string
+    val print : program -> unit
+    val to_file : program -> string -> bool
   end
 
 module YS : YICES =
   struct
     exception Error of string
-    type nvar = string
-    type svar = string
-    type fvar = string
-    type params = string
+
+    type symbol = string
+    type vartype =
+        TO of vartype * vartype
+      | BV of int
+      | INT
+      | BOOL
     type uop = NEG | NOTB | NOTL
     type bop = ADD | SUB | MUL | DIV | REM
       | SHR | SAR | SHL
       | ANDB | XORB | ORB
       | ANDL | ORL
       | EQ | NEQ | LT | GT | LE | GE
-    type se =
-        SCONST of string
-      | SVAR of svar
-      | CAT of se * se
-      | CPY of se
-    type ne =
-        NCONST of int
-      | NVAR of nvar
-      | UOP of uop * ne
-      | BOP of bop * ne * ne
-      | LEN of se
-      | CMP of se * se
-      | CALL of fvar * ne
-    type cmd =
+    type expr =
+        TRUE | FALSE
+      | VAR of symbol
+      | NUM of int
+      | LAMBDA of symbol * vartype * expr
+      | LET of symbol * expr * expr
+      | UOP of uop * expr
+      | BOP of bop * expr * expr
+      | ITE of expr * expr * expr
+      | CALL of symbol * expr
+    type command =
         SKIP
-      | ASSIGNN of nvar * ne
-      | ASSIGNS of svar * se
-      | SEQ of cmd * cmd
-      | IF of ne * cmd * cmd
-      | LETNV of nvar * ne * cmd
-      | LETSV of svar * se * cmd
-      | LETF of fvar * nvar * cmd * cmd
-      | RETURN of ne
-      | READINT of nvar
-      | READSTR of svar
-      | WRITEINT of ne
-      | WRITESTR of se
-      | ACCEPT
-      | REJECT
-      | ASSERT of ne
-    type program = cmd
-    type memory = int list  (*TODO*)
-    type value = int  (*TODO*)
-    let emptyMemory = [] (*TODO*)
-    let run (m, e) = (print_endline "running!"; 112233)
+      | DECLARE of symbol * vartype
+      | DEFINE of symbol * vartype * expr
+      | ASSERT of expr
+      | SEQ of command * command
+      | RET of expr
+    type program = command
+
+    let rec t2s t =
+      match t with
+      | TO (t1, t2) -> "(-> " ^ (t2s t1) ^ " " ^ (t2s t2) ^ ")"
+      | BV n -> "(bitvector " ^ (string_of_int n) ^ ")"
+      | INT -> "(bitvector 32)"
+      | BOOL -> "bool"
+    let u2s u =
+      match u with
+      | NEG -> "bv-neg" | NOTB -> "bv-not" | NOTL -> "not"
+    let b2s b =
+      match b with
+      | ADD -> "bv-add" | SUB -> "bv-sub" | MUL -> "bv-mul"
+      | DIV -> raise (Error "TODO") | REM -> raise (Error "TODO")
+      | SHR -> "bv-shift-right0" | SAR -> raise (Error "TODO") | SHL -> "bv-shift-left0"
+      | ANDB -> "bv-and" | XORB -> "bv-xor" | ORB -> "bv-or"
+      | ANDL -> "and" | ORL -> "or"
+      | EQ -> "=" | NEQ -> "/=" | LT -> "bv-lt" | GT -> "bv-gt" | LE -> "bv-le" | GE -> "bv-ge"
+    let rec e2s e =
+      match e with
+      | TRUE -> "true" | FALSE -> "false"
+      | VAR s -> s
+      | NUM n -> "(mk-bv 32 " ^ (string_of_int n) ^ ")"
+      | LAMBDA (s, t, e) -> "(lambda (" ^ s ^ "::" ^ (t2s t) ^ ") " ^ (e2s e) ^ ")"
+      | LET (s, e1, e2) -> "(let ((" ^ s ^ " " ^ (e2s e1) ^ ")) " ^ (e2s e2) ^ ")"
+      | UOP (u, e) -> "(" ^ (u2s u) ^ " " ^ (e2s e) ^ ")"
+      | BOP (b, e1, e2) -> "(" ^ (b2s b) ^ " " ^ (e2s e1) ^ " " ^ (e2s e2) ^ ")"
+      | ITE (e1, e2, e3) -> "(ite " ^ (e2s e1) ^ " " ^ (e2s e2) ^ " " ^ (e2s e3) ^ ")"
+      | CALL (s, e) -> "(" ^ s ^ " " ^ (e2s e) ^ ")"
+    let rec c2s c =
+      match c with
+      | SKIP -> "()\n"
+      | DECLARE (s, t) -> "(define " ^ s ^ "::" ^ (t2s t) ^ ")\n"
+      | DEFINE (s, t, e) -> "(define " ^ s ^ "::" ^ (t2s t) ^ " " ^ (e2s e) ^ ")\n"
+      | ASSERT e -> "(assert " ^ (e2s e) ^ ")\n"
+      | SEQ (c1, c2) -> (c2s c1) ^ (c2s c2)
+      | RET e -> (e2s e) ^ "\n"
+    let program_to_string pgm = (c2s pgm) ^ "(check)\n" ^ "(show-model)\n"
+    let print pgm = print_endline (program_to_string pgm)
+    let to_file pgm filename =
+      let s = program_to_string pgm in
+      raise (Error "TODO")
   end
+

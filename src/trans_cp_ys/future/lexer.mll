@@ -6,8 +6,8 @@
  open Parser
  exception Eof
  exception LexicalError
- let verbose1 s = (* (print_string s; print_newline(); s) *) (**) s (**)
- let verbose2 s = (* (print_string s; print_newline()) *) (**) () (**)
+ let verbose1 s = (**) (print_string s; print_newline(); s) (**) (* s *)
+ let verbose2 s = (**) (print_string s; print_newline()) (**) (* () *)
  let comment_depth = ref 0
  let keyword_tbl = Hashtbl.create 63
  let _ = List.iter (fun (keyword, tok) -> Hashtbl.add keyword_tbl keyword tok)
@@ -20,15 +20,21 @@
                     ("shl", SHL);
                     ("and", ANDL);
                     ("or", ORL);
+                    ("len", LEN);
+                    ("cmp", CMP);
+                    ("cat", CAT);
+                    ("cpy", CPY);
                     ("if", IF);
                     ("then",THEN);
                     ("else",ELSE);
-                    ("end",END);
                     ("let", LET);
                     ("in", IN);
                     ("proc", PROC);
                     ("return", RETURN);
                     ("readint", READINT);
+                    ("readstr", READSTR);
+                    ("writeint", WRITEINT);
+                    ("writestr", WRITESTR);
                     ("accept", ACCEPT);
                     ("reject", REJECT);
                     ("assert", ASSERT);
@@ -37,6 +43,9 @@
 
 let blank = [' ' '\n' '\t' '\r']+
 let id = ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '\'' '0'-'9' '_']*
+let nid = "@n"id
+let sid = "@s"id
+let fid = "@f"id
 let number = ['0'-'9']+
 
 rule start =
@@ -49,6 +58,9 @@ rule start =
             in try Hashtbl.find keyword_tbl id
               with _ -> ID id
          }
+    | nid { let id = verbose1 (Lexing.lexeme lexbuf) in NID id }
+    | sid { let id = verbose1 (Lexing.lexeme lexbuf) in SID id }
+    | fid { let id = verbose1 (Lexing.lexeme lexbuf) in FID id }
     | "+" { verbose2 "+"; PLUS }
     | "-" { verbose2 "-"; MINUS }
     | "*" { verbose2 "*"; STAR }
