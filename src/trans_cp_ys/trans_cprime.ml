@@ -50,22 +50,27 @@ let rec value_of : YS.program -> YS.expr
     (try value_of p1 with NOTRET -> value_of p2)
   | _ -> raise NOTRET
 
-let rec trans : CP.program -> YS.program
-= fun pgm -> match pgm with
+let rec trans_cmd : YS.expr -> CP.cmd -> YS.command
+= fun cond c -> match c with
   | CP.SKIP -> YS.SKIP
   | CP.ASSIGNN (x, ne) -> YS.DEFINE (x, YS.INT, trans_ne ne)
-  | CP.SEQ (c1, c2) -> YS.SEQ (trans c1, trans c2)
-  | CP.IF (ne, c1, c2) -> YS.SEQ (trans c1, trans c2)
+  | CP.SEQ (c1, c2) -> YS.SEQ (trans_cmd cond c1, trans_cmd cond c2)
+  | CP.IF (ne, c1, c2) ->
+    let exp = trans_ne ne in
+    YS.SEQ (trans_cmd (YS.BOP (YS.ANDL, cond, exp)) c1, trans_cmd (YS.BOP (YS.ANDL, cond, YS.UOP (YS.NOTL, exp))) c2)
   | CP.LETNV (x, ne, c) -> raise TODO (*YS.LET (x, trans_ne ne, trans c)*)
   | CP.LETF (f, x, c1, c2) ->
     let fdef = YS.DEFINE (f, YS.TO (YS.INT, YS.INT),
-                  YS.LAMBDA (x, YS.INT, value_of (trans c1))) in
-    YS.SEQ (fdef, trans c2)
+                  YS.LAMBDA (x, YS.INT, value_of (trans_cmd cond c1))) in
+    YS.SEQ (fdef, trans_cmd cond c2)
   | CP.RETURN ne -> YS.RET (trans_ne ne)
   | CP.READINT x -> YS.DECLARE (x, YS.INT)
-  | CP.ACCEPT -> YS.ASSERT YS.TRUE
-  | CP.REJECT -> YS.ASSERT YS.FALSE
+  | CP.ACCEPT -> YS.ASSERT cond
+  | CP.REJECT -> YS.ASSERT (YS.UOP (YS.NOTL, cond))
   | CP.ASSERT ne -> YS.ASSERT (trans_ne ne)
+
+let trans : CP.program -> YS.program
+= fun pgm -> trans_cmd YS.TRUE pgm
 
 end
 

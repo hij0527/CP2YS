@@ -1,3 +1,7 @@
+(*
+ * YICES for ver. 2.3
+ *)
+
 module type YICES =
   sig
     exception Error of string
@@ -84,8 +88,8 @@ module YS : YICES =
     let b2s b =
       match b with
       | ADD -> "bv-add" | SUB -> "bv-sub" | MUL -> "bv-mul"
-      | DIV -> raise (Error "TODO") | REM -> raise (Error "TODO")
-      | SHR -> "bv-shift-right0" | SAR -> raise (Error "TODO") | SHL -> "bv-shift-left0"
+      | DIV -> "bv-div" | REM -> "bv-rem"
+      | SHR -> "bv-lshr" | SAR -> "bv-ashr" | SHL -> "bv-shl"
       | ANDB -> "bv-and" | XORB -> "bv-xor" | ORB -> "bv-or"
       | ANDL -> "and" | ORL -> "or"
       | EQ -> "=" | NEQ -> "/=" | LT -> "bv-lt" | GT -> "bv-gt" | LE -> "bv-le" | GE -> "bv-ge"
@@ -102,7 +106,7 @@ module YS : YICES =
       | CALL (s, e) -> "(" ^ s ^ " " ^ (e2s e) ^ ")"
     let rec c2s c =
       match c with
-      | SKIP -> "()\n"
+      | SKIP -> ""
       | DECLARE (s, t) -> "(define " ^ s ^ "::" ^ (t2s t) ^ ")\n"
       | DEFINE (s, t, e) -> "(define " ^ s ^ "::" ^ (t2s t) ^ " " ^ (e2s e) ^ ")\n"
       | ASSERT e -> "(assert " ^ (e2s e) ^ ")\n"
@@ -112,6 +116,7 @@ module YS : YICES =
     let print pgm = print_endline (program_to_string pgm)
     let to_file pgm filename =
       let s = program_to_string pgm in
+      print_endline s;
       raise (Error "TODO")
   end
 
