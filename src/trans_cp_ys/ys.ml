@@ -4,11 +4,11 @@
 
 module type YICES =
   sig
-    exception Error of string
+    exception YSError of string
 
     type symbol = string
     type vartype =
-        TO of vartype * vartype
+        TO of vartype list * vartype
       | BV of int
       | INT
       | BOOL
@@ -22,12 +22,12 @@ module type YICES =
         TRUE | FALSE
       | VAR of symbol
       | NUM of int
-      | LAMBDA of symbol * vartype * expr
-      | LET of symbol * expr * expr
+      | LAMBDA of (symbol * vartype) list * expr
+      | LET of (symbol * expr) list * expr
       | UOP of uop * expr
       | BOP of bop * expr * expr
-      | ITE of expr * expr * expr
-      | CALL of symbol * expr
+      | IF of expr * expr * expr
+      | CALL of symbol * (expr list)
     type command =
         SKIP
       | DECLARE of symbol * vartype
@@ -43,11 +43,11 @@ module type YICES =
 
 module YS : YICES =
   struct
-    exception Error of string
+    exception YSError of string
 
     type symbol = string
     type vartype =
-        TO of vartype * vartype
+        TO of vartype list * vartype
       | BV of int
       | INT
       | BOOL
@@ -61,12 +61,12 @@ module YS : YICES =
         TRUE | FALSE
       | VAR of symbol
       | NUM of int
-      | LAMBDA of symbol * vartype * expr
-      | LET of symbol * expr * expr
+      | LAMBDA of (symbol * vartype) list * expr
+      | LET of (symbol * expr) list * expr
       | UOP of uop * expr
       | BOP of bop * expr * expr
-      | ITE of expr * expr * expr
-      | CALL of symbol * expr
+      | IF of expr * expr * expr
+      | CALL of symbol * (expr list)
     type command =
         SKIP
       | DECLARE of symbol * vartype
@@ -76,12 +76,24 @@ module YS : YICES =
       | RET of expr
     type program = command
 
+    let rec join s c =
+      match s with
+      | [] -> ""
+      | a::[] -> a
+      | a::s -> a ^ c ^ (join s c)
+      
     let rec t2s t =
       match t with
-      | TO (t1, t2) -> "(-> " ^ (t2s t1) ^ " " ^ (t2s t2) ^ ")"
+      | TO (t1, t2) -> "(-> " ^ (join (List.map (fun t -> t2s t) t1) " ") ^ " " ^ (t2s t2) ^ ")"
       | BV n -> "(bitvector " ^ (string_of_int n) ^ ")"
       | INT -> "(bitvector 32)"
       | BOOL -> "bool"
+    let v2s x t = x ^ "::" ^ (t2s t)
+    let rec pl2s pl =
+      match pl with
+      | [] -> raise (YSError "empty parameter")
+      | (x, t)::[] -> v2s x t
+      | (x, t)::pl -> (v2s x t) ^ " " ^ (pl2s pl)
     let u2s u =
       match u with
       | NEG -> "bv-neg" | NOTB -> "bv-not" | NOTL -> "not"
@@ -98,17 +110,18 @@ module YS : YICES =
       | TRUE -> "true" | FALSE -> "false"
       | VAR s -> s
       | NUM n -> "(mk-bv 32 " ^ (string_of_int n) ^ ")"
-      | LAMBDA (s, t, e) -> "(lambda (" ^ s ^ "::" ^ (t2s t) ^ ") " ^ (e2s e) ^ ")"
-      | LET (s, e1, e2) -> "(let ((" ^ s ^ " " ^ (e2s e1) ^ ")) " ^ (e2s e2) ^ ")"
+      | LAMBDA (pl, e) -> "(lambda (" ^ (pl2s pl) ^ ") " ^ (e2s e) ^ ")"
+      | LET (vlist, e) -> raise (YSError "TODO")
+      (*"(let ((" ^ s ^ " " ^ (e2s e1) ^ ")) " ^ (e2s e2) ^ ")"*)
       | UOP (u, e) -> "(" ^ (u2s u) ^ " " ^ (e2s e) ^ ")"
       | BOP (b, e1, e2) -> "(" ^ (b2s b) ^ " " ^ (e2s e1) ^ " " ^ (e2s e2) ^ ")"
-      | ITE (e1, e2, e3) -> "(ite " ^ (e2s e1) ^ " " ^ (e2s e2) ^ " " ^ (e2s e3) ^ ")"
-      | CALL (s, e) -> "(" ^ s ^ " " ^ (e2s e) ^ ")"
+      | IF (e1, e2, e3) -> "(ite " ^ (e2s e1) ^ " " ^ (e2s e2) ^ " " ^ (e2s e3) ^ ")"
+      | CALL (s, el) -> "(" ^ s ^ " " ^ (join (List.map (fun e -> e2s e) el) ",") ^ ")"
     let rec c2s c =
       match c with
       | SKIP -> ""
-      | DECLARE (s, t) -> "(define " ^ s ^ "::" ^ (t2s t) ^ ")\n"
-      | DEFINE (s, t, e) -> "(define " ^ s ^ "::" ^ (t2s t) ^ " " ^ (e2s e) ^ ")\n"
+      | DECLARE (s, t) -> "(define " ^ (v2s s t) ^ ")\n"
+      | DEFINE (s, t, e) -> "(define " ^ (v2s s t) ^ " " ^ (e2s e) ^ ")\n"
       | ASSERT e -> "(assert " ^ (e2s e) ^ ")\n"
       | SEQ (c1, c2) -> (c2s c1) ^ (c2s c2)
       | RET e -> (e2s e) ^ "\n"
@@ -117,6 +130,6 @@ module YS : YICES =
     let to_file pgm filename =
       let s = program_to_string pgm in
       print_endline s;
-      raise (Error "TODO")
+      raise (YSError "TODO")
   end
 

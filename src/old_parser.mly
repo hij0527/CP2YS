@@ -4,25 +4,40 @@
  */
 
 %{
+type declLet = NVal of string * Cprime.CP.ne
+             | Fun of string * string * Cprime.CP.cmd
 
 exception EmptyBinding
 exception ParsingError
 
+/*
+let rec desugarLet: declLet list * Cprime.CP.cmd -> Cprime.CP.cmd  =
+  fun (l, c) ->
+  	match l with
+	  [] -> raise EmptyBinding
+	| a::[] ->
+		(match a with
+          NVal(x, e') -> Cprime.CP.LETNV(x,e',c)
+      	| Fun(f,x,c') -> Cprime.CP.LETF(f,x,c',c))
+   | a::r -> 
+     (match a with
+        NVal(x, e') -> Cprime.CP.LETNV(x,e', desugarLet(r,c))
+      | Fun(f,x,c') -> Cprime.CP.LETF(f,x,c', desugarLet(r,c)))
+*/
 %}
 
 %token UNIT INT
 %token <int> NUM
 %token <string> ID
-%token PLUS MINUS STAR SLASH TILDE PERCENT ANDPERCENT VERTBAR CARET COMMA
+%token PLUS MINUS STAR SLASH TILDE PERCENT ANDPERCENT VERTBAR CARET 
 %token EQUAL NOTEQ LB RB NOT SHR SHL SAR ANDL ORL
 %token LBLOCK RBLOCK COLONEQ SEMICOLON IF THEN ELSE END
-%token FUNCTION RETURN
-%token READINT
+%token LET IN PROC RETURN READINT
 %token LP RP DQUOTE
 %token ACCEPT REJECT ASSERT
 %token EOF
 
-%nonassoc COMMA
+%nonassoc IN
 %left SEMICOLON
 %nonassoc THEN
 %nonassoc ELSE
@@ -39,13 +54,12 @@ exception ParsingError
 %right NOT TILDE
 
 %start program
-%type <Cprime.CP.program> program
+%type <Cprime.CP.cmd> program
 
 %%
 
 program:
-      funcdecls cmd EOF { Cprime.CP.PRGM ($1, $2) }
-    | cmd EOF { Cprime.CP.NOFUNC $1 }
+       cmd EOF { $1 }
     ;
 
 exprn: 
@@ -53,7 +67,7 @@ exprn:
     | NUM { Cprime.CP.NCONST ($1) }
     | MINUS exprn { Cprime.CP.UOP (Cprime.CP.NEG, $2) }
     | ID { Cprime.CP.NVAR ($1) }
-    | ID LP exprnlist RP { Cprime.CP.CALL ($1, $3) }
+    | ID LP exprn RP { Cprime.CP.CALL ($1, $3) }
     | exprn PLUS exprn { Cprime.CP.BOP (Cprime.CP.ADD, $1, $3) }
     | exprn MINUS exprn { Cprime.CP.BOP (Cprime.CP.SUB, $1, $3) }
     | exprn STAR exprn { Cprime.CP.BOP (Cprime.CP.MUL, $1, $3) }
@@ -76,10 +90,6 @@ exprn:
     | NOT exprn { Cprime.CP.UOP (Cprime.CP.NOTL, $2) }
     | TILDE exprn { Cprime.CP.UOP (Cprime.CP.NOTB, $2) }
     ;
-exprnlist:
-      exprn { [$1] }
-    | exprnlist COMMA exprn { $1 @ [$3] }
-    ;
 cmd:
       LP cmd RP { $2 }
     | UNIT { Cprime.CP.SKIP }
@@ -87,21 +97,20 @@ cmd:
     | ID COLONEQ exprn { Cprime.CP.ASSIGNN ($1,$3) }
     | cmd SEMICOLON cmd { Cprime.CP.SEQ ($1,$3) }
     | IF exprn THEN cmd ELSE cmd END { Cprime.CP.IF ($2, $4, $6) }
+/*    | LET decls IN cmd { desugarLet($2, $4) } */
     | RETURN exprn { Cprime.CP.RETURN ($2) }
     | READINT ID { Cprime.CP.READINT ($2) }
     | ACCEPT { Cprime.CP.ACCEPT }
     | REJECT { Cprime.CP.REJECT }
     | ASSERT exprn { Cprime.CP.ASSERT ($2) }
     ;
-funcdecls:
-      func { $1 }
-    | funcdecls func { Cprime.CP.FSEQ ($1, $2) }
+/*
+decls: decl {[$1]}
+    | decls SEMICOLON decl {$1 @ [$3]}
     ;
-func: FUNCTION ID LP params RP EQUAL cmd END { Cprime.CP.FUN ($2, $4, $7) }
+decl: ID COLONEQ exprn { NVal ($1, $3) }
+    | PROC ID LP ID RP EQUAL cmd {Fun ($2, $4, $7)}
     ;
-params:
-      ID { [$1] }
-    | params COMMA ID { $1 @ [$3] }
-    ;
+*/
 
 %%

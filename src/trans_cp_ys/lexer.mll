@@ -6,8 +6,9 @@
  open Parser
  exception Eof
  exception LexicalError
- let verbose1 s = (* (print_string s; print_newline(); s) *) (**) s (**)
- let verbose2 s = (* (print_string s; print_newline()) *) (**) () (**)
+ let verbose = false
+ let verbose1 s = if verbose then (print_string s; print_newline(); s) else s
+ let verbose2 s = if verbose then (print_string s; print_newline()) else ()
  let comment_depth = ref 0
  let keyword_tbl = Hashtbl.create 63
  let _ = List.iter (fun (keyword, tok) -> Hashtbl.add keyword_tbl keyword tok)
@@ -24,9 +25,7 @@
                     ("then",THEN);
                     ("else",ELSE);
                     ("end",END);
-                    ("let", LET);
-                    ("in", IN);
-                    ("proc", PROC);
+                    ("function", FUNCTION);
                     ("return", RETURN);
                     ("readint", READINT);
                     ("accept", ACCEPT);
@@ -66,6 +65,7 @@ rule start =
     | "[" { verbose2 "["; LBLOCK }
     | ":=" { verbose2 ":="; COLONEQ }
     | ";" { verbose2 ";"; SEMICOLON }
+    | "," { verbose2 ","; COMMA }
     | "(" { verbose2 "("; LP }
     | ")" { verbose2 ")"; RP }
     | "\"" { verbose2 "\""; DQUOTE }

@@ -16,26 +16,19 @@ module type CPRIME =
       | PHI of ne * nvar * nvar
       | UOP of uop * ne
       | BOP of bop * ne * ne
-      | CALL of fvar * ne
+      | CALL of fvar * (ne list)
     type cmd =
         SKIP
       | ASSIGNN of nvar * ne
       | SEQ of cmd * cmd
       | IF of ne * cmd * cmd
-      | LETNV of nvar * ne * cmd
-      | LETF of fvar * nvar * cmd * cmd
       | RETURN of ne
       | READINT of nvar
       | ACCEPT
       | REJECT
       | ASSERT of ne
-    type funcdecl = FUN of fvar * nvar * cmd
-(*    type program = funcdecl list * cmd *)
-    type program = cmd
-    type memory
-    type value
-    val emptyMemory : memory
-    val run : memory * program -> value
+    type funcdecl = FUN of fvar * (nvar list) * cmd | FSEQ of funcdecl * funcdecl
+    type program = PRGM of funcdecl * cmd | NOFUNC of cmd
   end
 
 module CP : CPRIME =
@@ -56,24 +49,17 @@ module CP : CPRIME =
       | PHI of ne * nvar * nvar
       | UOP of uop * ne
       | BOP of bop * ne * ne
-      | CALL of fvar * ne
+      | CALL of fvar * (ne list)
     type cmd =
         SKIP
       | ASSIGNN of nvar * ne
       | SEQ of cmd * cmd
       | IF of ne * cmd * cmd
-      | LETNV of nvar * ne * cmd
-      | LETF of fvar * nvar * cmd * cmd
       | RETURN of ne
       | READINT of nvar
       | ACCEPT
       | REJECT
       | ASSERT of ne
-    type funcdecl = FUN of fvar * nvar * cmd
-(*    type program = funcdecl list * cmd *)
-    type program = cmd
-    type memory = int list  (*TODO*)
-    type value = int  (*TODO*)
-    let emptyMemory = [] (*TODO*)
-    let run (m, e) = (print_endline "running!"; 112233)
+    type funcdecl = FUN of fvar * (nvar list) * cmd | FSEQ of funcdecl * funcdecl
+    type program = PRGM of funcdecl * cmd | NOFUNC of cmd
   end

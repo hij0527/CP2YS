@@ -1,0 +1,4 @@
+(define k20_1_E10::(-> short bool)
+  (lambda (a1::short)
+    (= (bv-extract 15 8 a1)
+       (bv-extract 7 0 a1))))
