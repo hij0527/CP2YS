@@ -36,6 +36,7 @@ module type YICES =
       | SEQ of command * command
       | RET of expr
     type program = command
+    val type_of : (symbol * vartype) list -> expr -> vartype
     val program_to_string : program -> string
     val print : program -> unit
     val to_file : program -> string -> bool
@@ -76,6 +77,36 @@ module YS : YICES =
       | RET of expr
     type program = command
 
+    let rec drop lst num =
+      if num = 0 then lst else drop (List.tl lst) (num - 1)
+
+    let get_func_type t p =
+      match t with
+      | TO (l, r) ->
+        let anum = List.length l
+        and pnum = List.length p in
+        if anum < pnum then raise (YSError "too many arguments")
+        else if anum = pnum then r
+        else TO (drop l pnum, r)
+      | _ -> raise (YSError "function type expected")
+
+    let rec type_of typetbl e =
+      match e with
+      | TRUE | FALSE -> BOOL
+      | VAR x -> List.assoc x typetbl
+      | NUM _ -> INT
+      | LAMBDA (v, e) -> TO (List.map (fun (x, t) -> t) v, type_of typetbl e)
+      | LET (_, e) -> type_of typetbl e
+      | UOP (NOTL, e) -> BOOL
+      | UOP (_, e) -> INT (* ys_type_of e *)
+      | BOP (bop, e1, e2) ->
+        (match bop with
+        | ANDL | ORL | EQ | NEQ | LT | GT | LE | GE -> BOOL
+        | _ -> INT
+        )
+      | IF (cond, e1, e2) -> type_of typetbl e1
+      | CALL (f, p) -> get_func_type (List.assoc f typetbl) p
+
     let rec join s c =
       match s with
       | [] -> ""
@@ -110,13 +141,14 @@ module YS : YICES =
       | TRUE -> "true" | FALSE -> "false"
       | VAR s -> s
       | NUM n -> "(mk-bv 32 " ^ (string_of_int n) ^ ")"
-      | LAMBDA (pl, e) -> "(lambda (" ^ (pl2s pl) ^ ") " ^ (e2s e) ^ ")"
-      | LET (vlist, e) -> raise (YSError "TODO")
-      (*"(let ((" ^ s ^ " " ^ (e2s e1) ^ ")) " ^ (e2s e2) ^ ")"*)
+      | LAMBDA (pl, e) -> "\n  (lambda (" ^ (pl2s pl) ^ ")\n    " ^ (e2s e) ^ ")"
+      | LET (vl, e) ->
+        let vls = join (List.map (fun (x, e) -> "(" ^ x ^ " " ^ (e2s e) ^ ")") vl) "\n\t" in
+        "(let (" ^ vls ^ ")\n\t" ^ (e2s e) ^ ")"
       | UOP (u, e) -> "(" ^ (u2s u) ^ " " ^ (e2s e) ^ ")"
       | BOP (b, e1, e2) -> "(" ^ (b2s b) ^ " " ^ (e2s e1) ^ " " ^ (e2s e2) ^ ")"
       | IF (e1, e2, e3) -> "(ite " ^ (e2s e1) ^ " " ^ (e2s e2) ^ " " ^ (e2s e3) ^ ")"
-      | CALL (s, el) -> "(" ^ s ^ " " ^ (join (List.map (fun e -> e2s e) el) ",") ^ ")"
+      | CALL (s, el) -> "(" ^ s ^ " " ^ (join (List.map (fun e -> e2s e) el) " ") ^ ")"
     let rec c2s c =
       match c with
       | SKIP -> ""

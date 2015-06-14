@@ -1,0 +1,12 @@
+(define k20_1_E10::(-> (bitvector 32) bool) 
+  (lambda (k20_1_E10@a1$1::(bitvector 32))
+    (= (bv-and (bv-lshr k20_1_E10@a1$1 (mk-bv 32 8)) (mk-bv 32 255)) (bv-and k20_1_E10@a1$1 (mk-bv 32 255)))))
+(define k20_2_DA2::(-> (bitvector 32) bool) 
+  (lambda (k20_2_DA2@a1$1::(bitvector 32))
+    (or (or (= (mk-bv 32 0) (bv-and (bv-xor (bv-lshr k20_2_DA2@a1$1 (mk-bv 32 12)) (bv-lshr k20_2_DA2@a1$1 (mk-bv 32 8))) (mk-bv 32 15))) (= (mk-bv 32 0) (bv-and (bv-xor (bv-lshr k20_2_DA2@a1$1 (mk-bv 32 8)) (bv-and (bv-lshr k20_2_DA2@a1$1 (mk-bv 32 4)) (mk-bv 32 255))) (mk-bv 32 15)))) (= (mk-bv 32 0) (bv-and (bv-xor (bv-and (bv-lshr k20_2_DA2@a1$1 (mk-bv 32 4)) (mk-bv 32 255)) (bv-and k20_2_DA2@a1$1 (mk-bv 32 255))) (mk-bv 32 15))))))
+(define x$1::(bitvector 32))
+(assert (not (and true (or (k20_1_E10 x$1) (k20_2_DA2 x$1)))))
+(assert (and true (not (or (k20_1_E10 x$1) (k20_2_DA2 x$1)))))
+(check)
+(show-model)
+
