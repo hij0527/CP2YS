@@ -13,8 +13,8 @@
  let keyword_tbl = Hashtbl.create 63
  let _ = List.iter (fun (keyword, tok) -> Hashtbl.add keyword_tbl keyword tok)
                    [("unit", UNIT);
-                    ("true", NUM 1);
-                    ("false", NUM 0);
+                    ("true", TRUE);
+                    ("false", FALSE);
                     ("not", NOT);
                     ("shr", SHR);
                     ("sar", SAR);

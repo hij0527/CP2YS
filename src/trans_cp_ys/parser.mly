@@ -10,8 +10,9 @@ exception ParsingError
 
 %}
 
-%token UNIT INT
+%token UNIT INT BOOL
 %token <int> NUM
+%token TRUE FALSE
 %token <string> ID
 %token PLUS MINUS STAR SLASH TILDE PERCENT ANDPERCENT VERTBAR CARET COMMA
 %token EQUAL NOTEQ LB RB NOT SHR SHL SAR ANDL ORL
@@ -32,7 +33,8 @@ exception ParsingError
 %left VERTBAR
 %left CARET
 %left ANDPERCENT
-%left EQUAL LB RB
+%left EQUAL NOTEQ
+%left LB RB
 %left SHR SAR SHL
 %left PLUS MINUS
 %left STAR SLASH PERCENT
@@ -50,6 +52,8 @@ program:
 
 exprn: 
       LP exprn RP { $2 }
+    | TRUE { Cprime.CP.TRUE }
+    | FALSE { Cprime.CP.FALSE }
     | NUM { Cprime.CP.NCONST ($1) }
     | MINUS exprn { Cprime.CP.UOP (Cprime.CP.NEG, $2) }
     | ID { Cprime.CP.NVAR ($1) }

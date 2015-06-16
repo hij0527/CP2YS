@@ -11,7 +11,8 @@ module type CPRIME =
       | ANDL | ORL
       | EQ | NEQ | LT | GT | LE | GE
     type ne =
-        NCONST of int
+      | TRUE | FALSE
+      | NCONST of int
       | NVAR of nvar
       | PHI of ne * nvar * nvar
       | UOP of uop * ne
@@ -44,7 +45,8 @@ module CP : CPRIME =
       | ANDL | ORL
       | EQ | NEQ | LT | GT | LE | GE
     type ne =
-        NCONST of int
+      | TRUE | FALSE
+      | NCONST of int
       | NVAR of nvar
       | PHI of ne * nvar * nvar
       | UOP of uop * ne

@@ -38,7 +38,6 @@ let phi_func tbl ne vt1 vt2 =
     (match l with
     | [] -> CP.SKIP
     | (x, (n1, n2))::r ->
-      let x = func_var x in
       let nx, newvars = next_var x in
       Hashtbl.add ht x (Hashtbl.find newvars x);
       let c = to_phi_assigns ht r in
@@ -59,6 +58,8 @@ let phi_func tbl ne vt1 vt2 =
 
 let rec ne_to_ssa : (CP.nvar, int) Hashtbl.t -> CP.ne -> CP.ne =
 fun t ne -> match ne with
+  | CP.TRUE -> CP.TRUE
+  | CP.FALSE -> CP.FALSE
   | CP.NCONST n -> CP.NCONST n
   | CP.NVAR x -> let x = func_var x in CP.NVAR (var_to_ssa x (Hashtbl.find t x))
   | CP.UOP (uop, ne1) -> CP.UOP (uop, ne_to_ssa t ne1)

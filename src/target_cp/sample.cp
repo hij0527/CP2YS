@@ -8,7 +8,7 @@ readint w;
 if (w < 5)
   then
     x := 2;
-    z := fun(x)
+    z := fun(x, w)
   else
     if (w > 10)
       then

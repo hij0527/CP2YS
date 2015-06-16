@@ -23,7 +23,9 @@ module CPParseTreePrinter : sig val print : program -> unit end =
     
     let rec pne ne =
       match ne with
-        NCONST i -> ps "NUM" [[string_of_int i]]
+      | TRUE -> ps "true" [[]]
+      | FALSE -> ps "false" [[]]
+      | NCONST i -> ps "NUM" [[string_of_int i]]
       | NVAR x -> ps "NVAR" [q x]
       | PHI (ne, x1, x2) -> ps "PHI" [pne ne; q x1; q x2]
       | UOP (uop, ne) -> ps (puop uop) [pne ne]

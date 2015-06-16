@@ -40,6 +40,8 @@ let trans_bop : CP.bop -> YS.bop
 
 let rec trans_ne : CP.ne -> YS.expr
 = fun ne -> match ne with
+  | CP.TRUE -> YS.TRUE
+  | CP.FALSE -> YS.FALSE
   | CP.NCONST n -> YS.NUM n
   | CP.NVAR x -> YS.VAR x
   | CP.PHI (ne, x1, x2) -> YS.IF (trans_ne ne, YS.VAR x1, YS.VAR x2)
@@ -125,8 +127,12 @@ let rec retlist_to_expr (retlist : (YS.expr * YS.expr) list) : YS.expr =
   match retlist with
   | [] -> raise (TransError "no return statement")
   | (YS.TRUE, e)::[] -> e
-  | (c, e)::[] -> YS.IF (c, e, YS.NUM 0)  (* return 0 for default value *)
-  | (YS.TRUE, e)::r -> raise (TransError "unexpected return behavior")
+  | (c, e)::[] ->
+    (match YS.type_of !type_table e with
+    | YS.INT -> YS.IF (c, e, YS.NUM 0)  (* return 0 for default value *)
+    | YS.BOOL -> YS.IF (c, e, YS.FALSE)
+    | _ -> raise (TransError "return type error")
+    )
   | (c, e)::r -> YS.IF (c, e, retlist_to_expr r)
 
 let rec trans_func : CP.funcdecl -> YS.program
